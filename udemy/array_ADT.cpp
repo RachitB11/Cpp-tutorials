@@ -1,5 +1,6 @@
 #include <iostream>
 #include <limits>
+#include <assert.h>
 
 // Abstract data types
 // Just need to have a representation and a set of operations
@@ -55,30 +56,64 @@ using namespace std;
 
 // ARRAY WITH PREDEFINED SIZE (Just for the ease of not having to add the elements everytime)
 // Note that  since the array is defined in the stack we do not need to delete it
-struct Array
+template<typename T>
+class Array
 {
-  int A[20];
+private:
+  T* A;
   int size;
   int length;
-  void display() const;
-  void add(int x);
-  void insert(int ind, int x);
-  void del(int ind);
   void swap(int i, int j);
+  int recBinSearch(T x, int l, int r);
+
+public:
+  Array(T* arr, int s, int l);
+  Array(initializer_list<T> arr, int s, int l);
+  ~Array();
+  void display() const;
+  void add(T x);
+  void insert(int ind, T x);
+  void del(int ind);
   void bubbleSort();
-  int linSearch(int x);
-  int binSearch(int x, int l, int r);
-  int get(int ind) const;
-  void set(int ind, int x);
-  int min();
-  int max();
-  int sum();
-  int avg();
+  int linSearch(T x);
+  int binSearch(T x);
+  T get(int ind) const;
+  void set(int ind, T x);
+  T min();
+  T max();
+  T sum();
+  T avg();
   void reverse();
 };
 
+// Initialize using a list
+template<typename T> Array<T>::Array(initializer_list<T> arr, int s, int l) {
+  assert(arr.size()<=s);
+  A = new T[s];
+  fill_n(A,s,0);
+  copy(arr.begin(), arr.end(), A);
+  size = s;
+  length = l;
+}
+
+// Initialize using a pointer
+template<typename T> Array<T>::Array(T* arr, int s, int l)
+{
+  A = arr;
+  size = s;
+  length = l;
+}
+
+// Destructor to delete the pointer to the array
+template<typename T> Array<T>::~Array()
+{
+  delete []A;
+  size=0;
+  length=0;
+}
+
 // O(n)
-void Array::display() const
+template<typename T> void Array<T>::display() const
 {
   for(int i=0; i<length; i++)
   {
@@ -88,7 +123,7 @@ void Array::display() const
 }
 
 // O(1)
-void Array::add(int x)
+template<typename T> void Array<T>::add(T x)
 {
   if(length != size)
   {
@@ -98,7 +133,7 @@ void Array::add(int x)
 }
 
 // O(n)
-void Array::insert(int ind, int x)
+template<typename T> void Array<T>::insert(int ind, T x)
 {
   if(length!=size)
   {
@@ -116,7 +151,7 @@ void Array::insert(int ind, int x)
 }
 
 // O(n)
-void Array::del(int ind)
+template<typename T> void Array<T>::del(int ind)
 {
   if(ind<length)
   {
@@ -130,15 +165,15 @@ void Array::del(int ind)
 }
 
 // O(1)
-void Array::swap(int i, int j)
+template<typename T> void Array<T>::swap(int i, int j)
 {
-  int temp = A[i];
+  T temp = A[i];
   A[i] = A[j];
   A[j] = temp;
 }
 
 // O(n^2)
-void Array::bubbleSort()
+template<typename T> void Array<T>::bubbleSort()
 {
   for(int i=0; i<length; i++)
   {
@@ -152,7 +187,7 @@ void Array::bubbleSort()
 // O(n)
 // Bonus : Transposition. Because the probability of searching the element again is high
 // what you can do is move it 1 index up to reduce the search time
-int Array::linSearch(int x)
+template<typename T> int Array<T>::linSearch(T x)
 {
   for(int i=0;i<length;i++)
   {
@@ -169,32 +204,37 @@ int Array::linSearch(int x)
 // Can easily be done iteratively too
 // We know that the iterative way will be more optimal than the tail recursion
 // as the rescursion will keep on making copies of these variables in the stack
-int Array::binSearch(int x, int l, int r)
+template<typename T> int Array<T>::recBinSearch(T x, int l, int r)
 {
   int m = l + (r-l)/2;
 
   if(l<=r)
   {
     if(A[m]==x) return m;
-    if(A[m]>x) return binSearch(x,l,m-1);
-    else return binSearch(x,m+1,r);
+    if(A[m]>x) return recBinSearch(x,l,m-1);
+    else return recBinSearch(x,m+1,r);
   }
   return -1;
 }
 
-int Array::get(int ind) const
+template<typename T> int Array<T>::binSearch(T x)
+{
+  return recBinSearch(x,0,length-1);
+}
+
+template<typename T> T Array<T>::get(int ind) const
 {
   if(ind>=0 && ind<length) return A[ind];
 }
 
-void Array::set(int ind, int x)
+template<typename T> void Array<T>::set(int ind, T x)
 {
   if(ind>=0 && ind<length) A[ind] = x;
 }
 
-int Array::max()
+template<typename T> T Array<T>::max()
 {
-  int max = -numeric_limits<int>::infinity();
+  T max = -numeric_limits<T>::infinity();
   for(int i=0;i<length;i++)
   {
     if(A[i]>max) max=A[i];
@@ -202,9 +242,9 @@ int Array::max()
   return max;
 }
 
-int Array::min()
+template<typename T> T Array<T>::min()
 {
-  int min = numeric_limits<int>::infinity();
+  T min = numeric_limits<T>::infinity();
   for(int i=0;i<length;i++)
   {
     if(A[i]<min) min=A[i];
@@ -212,9 +252,9 @@ int Array::min()
   return min;
 }
 
-int Array::sum()
+template<typename T> T Array<T>::sum()
 {
-  int sum=0;
+  T sum=0;
   for(int i=0;i<length;i++)
   {
     sum+=A[i];
@@ -222,21 +262,58 @@ int Array::sum()
   return sum;
 }
 
-int Array::avg()
+template<typename T> T Array<T>::avg()
 {
-  return sum()/length;
+  return sum()/static_cast<T>(length);
 }
 
-void Array::reverse()
+template<typename T> void Array<T>::reverse()
 {
   for(int i=0; i<length/2; i++) swap(i,length-1-i);
 }
 
+int* merge(int* arr1,int* arr2,int m, int n)
+{
+  int *arr = new int[n+m];
+  int i=0, j=0, k=0;
+
+  for(int k=0;k<(n+m);k++)
+  {
+    if(i<m&&j<n)
+    {
+      if(arr1[i]<arr2[j])
+      {
+        arr[k] = arr1[i];
+        i++;
+      }
+      else
+      {
+        arr[k] = arr2[j];
+        j++;
+      }
+    }
+    else if(i<m&&j==n)
+    {
+      arr[k] = arr1[i];
+      i++;
+    }
+    else
+    {
+      arr[k] = arr2[j];
+      j++;
+    }
+  }
+
+  return arr;
+}
+
 int main()
 {
-  Array arr = {{2,6,3,5,4},20,5};
+  Array<int> arr({2,6,3,5,1},20,5);
   cout<<"Displaying the numbers"<<endl;
   arr.display();
+
+  cout<<"arr.avg(): "<<arr.avg()<<endl;
 
   arr.add(7);
   arr.display();
@@ -254,13 +331,24 @@ int main()
   arr.bubbleSort();
   cout<<"After sort: ";
   arr.display();
-  cout<<"arr.binSearch(5,0,arr.length-1): "<<arr.binSearch(5,0,arr.length-1)<<endl;
-  cout<<"arr.binSearch(8,0,arr.length-1): "<<arr.binSearch(8,0,arr.length-1)<<endl;
-  cout<<"arr.binSearch(2,0,arr.length-1): "<<arr.binSearch(2,0,arr.length-1)<<endl;
+  cout<<"arr.binSearch(5): "<<arr.binSearch(5)<<endl;
+  cout<<"arr.binSearch(8): "<<arr.binSearch(8)<<endl;
+  cout<<"arr.binSearch(2): "<<arr.binSearch(2)<<endl;
 
   arr.reverse();
   cout<<"After reverse: ";
   arr.display();
+
+  // For sorted sets the same concept used to merge with maintaining iterators
+  // for each of the arrays can be used for set operations like union, intersection
+  // and difference.
+  int arr1[] = {3,8,16,20,25};
+  int arr2[] = {4,10,12,22,24,33,39};
+  int *arr3 = merge(arr1,arr2,5,7);
+  cout<<"Merged arrays: ";
+  for(int i=0; i<(5+7);i++) cout<<arr3[i]<<" ";
+  cout<<endl;
+  delete []arr3;
 
   return 0;
 }
