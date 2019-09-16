@@ -26,6 +26,7 @@ add_executable(smart_ptrs_begin experiment/smart_ptrs_begin.cpp)
 add_executable(polymorphic_templates experiment/polymorphic_templates.cpp)
 add_executable(threads experiment/threads.cpp)
 add_executable(threads_primes experiment/threads_primes.cpp)
+add_executable(bits experiment/bits.cpp)
 
 add_executable(1_dfs_bfs_adjacency important/1_dfs_bfs_adjacency.cpp)
 add_executable(3_sort important/3_sort.cpp)
