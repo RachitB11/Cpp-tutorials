@@ -1,6 +1,6 @@
 #include <iostream>
 #include <bitset>
-#include "math.h"
+#include <cmath>
 
 #define RADIX_NUMBER 2
 

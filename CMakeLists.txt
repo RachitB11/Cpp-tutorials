@@ -37,3 +37,6 @@ add_executable(10_threads important/10_threads.cpp)
 add_executable(recursion udemy/recursion.cpp)
 add_executable(array_udemy udemy/array.cpp)
 add_executable(array_ADT udemy/array_ADT.cpp)
+
+add_executable(unique_ptr work/unique_ptr.cpp)
+add_executable(nan work/nan.cpp)
