@@ -1,5 +1,9 @@
 cmake_minimum_required (VERSION 2.6)
 project (Tutorial)
+
+# Dependencies : libboost-all-dev libgnuplot-iostream-dev
+find_package(Boost COMPONENTS filesystem system iostreams REQUIRED)
+
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -pthread")
 
 add_executable(hello_world experiment/hello_world.cpp)
@@ -40,3 +44,5 @@ add_executable(array_ADT udemy/array_ADT.cpp)
 
 add_executable(unique_ptr work/unique_ptr.cpp)
 add_executable(nan work/nan.cpp)
+add_executable(runge_kutta_4 work/runge_kutta_4.cpp)
+target_link_libraries(runge_kutta_4 ${Boost_LIBRARIES})
