@@ -8,11 +8,10 @@ const size_t NDIM = 2;
 
 typedef std::valarray<double> Vector;
 
-inline void mysleep(unsigned millis) {
-  usleep(millis * 1000);
-}
+// Here the state is [x, v] representing position and velocity
 
 // t is the time and X is the current state
+// Return : First order differential values of the state
 Vector first_order( const double t, const Vector X )
 {
   // Right hand side of the ODE to solve, in this case:
@@ -30,6 +29,7 @@ Vector first_order( const double t, const Vector X )
 }
 
 // t is the time and X0 is the init state
+// Return ideal value as computed by solving the ODE
 Vector state_ideal( const double t, const Vector X0 )
 {
   // Right hand side of the ODE to solve, in this case:
@@ -52,7 +52,7 @@ int main()
 
   // State variable X is [position, velocity]
   double init[] = { 0., 0. };
-  Vector X( init, NDIM );
+  Vector X_rk4( init, NDIM );
   Vector X_euler( init, NDIM );
   Vector X_ideal( init, NDIM );
   Vector X_init( init, NDIM );
@@ -61,11 +61,6 @@ int main()
   double tMax=5.;
   double dt = 0.1;
 
-  // Initialize the plot.
-  Gnuplot gp;
-
-  gp << "set terminal wxt size 1000,500\n";
-  gp << "set multiplot layout 2,1 title 'RK4 vs Euler vs Ideal'\n";
   // Vectors to hold the x,t pairs
   std::vector<std::pair<double,double>> x_rk4;
   std::vector<std::pair<double,double>> x_euler;
@@ -76,53 +71,60 @@ int main()
 
   //time loop
   int nSteps = round( ( tMax - t ) / dt );
-  for (int stepNumber = 1; stepNumber<=nSteps; ++stepNumber)
-  {
-    gp.flush();
 
+  for (int i = 0; i<=nSteps; i++)
+  {
     // RK4
-    Vector k1 = first_order( t, X );
-    Vector k2 = first_order( t + dt / 2.0,  X + dt / 2.0 * k1 );
-    Vector k3 = first_order( t + dt / 2.0, X + dt / 2.0 * k2 );
-    Vector k4 = first_order( t + dt, X + dt * k3 );
-    X += dt / 6.0 * ( k1 + 2.0 * k2 + 2.0 * k3 + k4 );
+    Vector k1 = dt*first_order( t, X_rk4 );
+    Vector k2 = dt*first_order( t + dt / 2.0,  X_rk4 + k1 / 2.0);
+    Vector k3 = dt*first_order( t + dt / 2.0, X_rk4 + k2 / 2.0);
+    Vector k4 = dt*first_order( t + dt, X_rk4 + k3 );
+    X_rk4 += ( k1 + 2.0 * k2 + 2.0 * k3 + k4 ) / 6.0;
 
     // Euler
-    X_euler += dt * first_order(t,X_euler);
+    X_euler += dt * first_order(t+dt, X_euler);
 
     // Ideal
-    X_ideal = state_ideal(t,X_init);
+    X_ideal = state_ideal(t+dt, X_init);
 
-    x_rk4.push_back(std::make_pair(t,X[0]));
+    // Store the data in the variables
+    x_rk4.push_back(std::make_pair(t,X_rk4[0]));
     x_euler.push_back(std::make_pair(t,X_euler[0]));
     x_ideal.push_back(std::make_pair(t,X_ideal[0]));
-    gp<<"set title 'Position'\nset xrange [0:5.]\nset yrange [0:21.]\n"
-      <<"set xlabel't'\nset ylabel 'x'\n";
-    gp << "plot '-' with lines title 'rk4', '-' with lines title 'euler', '-' with lines title 'ideal'\n";
-    gp.send1d(x_rk4);
-    gp.send1d(x_euler);
-    gp.send1d(x_ideal);
 
-    vel_rk4.push_back(std::make_pair(t,X[1]));
+    vel_rk4.push_back(std::make_pair(t,X_rk4[1]));
     vel_euler.push_back(std::make_pair(t,X_euler[1]));
     vel_ideal.push_back(std::make_pair(t,X_ideal[1]));
-    gp<<"set title 'Velocity'\nset xrange [0:5.]\nset yrange [0:13.]\n"
-      <<"set xlabel 't'\nset ylabel 'x_{dot}'\n";
-    gp << "plot '-' with lines title 'rk4', '-' with lines title 'euler', '-' with lines title 'ideal'\n";
-    gp.send1d(vel_rk4);
-    gp.send1d(vel_euler);
-    gp.send1d(vel_ideal);
-
-    mysleep(50);
 
     t += dt;
   }
 
+  // Plotting
+  Gnuplot gp;
+
+  gp << "set terminal wxt size 1000,500\n";
+  gp << "set multiplot layout 2,1 title 'RK4 vs Euler vs Ideal'\n";
+
+  gp<<"set title 'Position'\nset xrange [0:5.]\nset yrange [0:21.]\n"
+    <<"set xlabel't'\nset ylabel 'x'\n";
+  gp << "plot '-' with lines title 'rk4', '-' with lines title 'euler', '-' with lines title 'ideal'\n";
+  gp.send1d(x_rk4);
+  gp.send1d(x_euler);
+  gp.send1d(x_ideal);
+
+  gp<<"set title 'Velocity'\nset xrange [0:5.]\nset yrange [0:13.]\n"
+    <<"set xlabel 't'\nset ylabel 'x_{dot}'\n";
+  gp << "plot '-' with lines title 'rk4', '-' with lines title 'euler', '-' with lines title 'ideal'\n";
+  gp.send1d(vel_rk4);
+  gp.send1d(vel_euler);
+  gp.send1d(vel_ideal);
+
   gp<<"unset multiplot\n";
 
+  // Final values
   std::cout<<"Final time: "<<t<<std::endl;
-  std::cout<<"Final rk4 position: "<<X[0]<<std::endl;
-  std::cout<<"Final rk4 velocity: "<<X[1]<<std::endl;
+  std::cout<<"Final rk4 position: "<<X_rk4[0]<<std::endl;
+  std::cout<<"Final rk4 velocity: "<<X_rk4[1]<<std::endl;
   std::cout<<"Final euler position: "<<X_euler[0]<<std::endl;
   std::cout<<"Final euler velocity: "<<X_euler[1]<<std::endl;
   std::cout<<"Final ideal position: "<<X_ideal[0]<<std::endl;
