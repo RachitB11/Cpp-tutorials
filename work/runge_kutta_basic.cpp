@@ -10,7 +10,7 @@
 double first_order(const double t, const double X)
 {
   // Right hand side of the ODE to solve, in this case:
-  // d/dt(x) = 2*t;
+  // d/dt(x) = 2*t
 
   // So solving these simple equations the ideal solution should be
   // x = t^2
@@ -23,7 +23,7 @@ double first_order(const double t, const double X)
 double state_ideal( const double t, const double X0 )
 {
   // Right hand side of the ODE to solve, in this case:
-  // d/dt(x) = 2*t;
+  // d/dt(x) = 2*t
 
   // So solving these simple equations the ideal solution should be
   // x = t^2
@@ -50,12 +50,19 @@ int main()
   std::vector<std::pair<double,double>> x_rk4;
   std::vector<std::pair<double,double>> x_euler;
   std::vector<std::pair<double,double>> x_ideal;
+  x_rk4.push_back(std::make_pair(t,X_init));
+  x_euler.push_back(std::make_pair(t,X_init));
+  x_ideal.push_back(std::make_pair(t,X_init));
+
 
   //time loop
   int nSteps = round( ( tMax - t ) / dt );
 
   for (int i = 0; i<nSteps; i++)
   {
+    // NOTE: RK4 and Euler are predicting the next state given info about the current
+    // state and the change in time dt
+
     // RK4
     double k1 = dt*first_order( t, X_rk4 );
     double k2 = dt*first_order( t + dt / 2.0,  X_rk4 + k1 / 2.0);
@@ -67,16 +74,16 @@ int main()
     X_euler += dt * first_order(t,X_euler);
 
     // Ideal
-    t += dt;
     X_ideal = state_ideal(t+dt,X_init);
 
     // Store the data in the variables
-    x_rk4.push_back(std::make_pair(t,X_rk4));
-    x_euler.push_back(std::make_pair(t,X_euler));
-    x_ideal.push_back(std::make_pair(t,X_ideal));
+    x_rk4.push_back(std::make_pair(t+dt,X_rk4));
+    x_euler.push_back(std::make_pair(t+dt,X_euler));
+    x_ideal.push_back(std::make_pair(t+dt,X_ideal));
 
-    std::cout<<"t: "<<t<<" X_rk4: "<<X_rk4<<" X_euler: "<<X_euler<<" X_ideal: "<<X_ideal<<std::endl;
+    // std::cout<<"t: "<<t+dt<<" X_rk4: "<<X_rk4<<" X_euler: "<<X_euler<<" X_ideal: "<<X_ideal<<std::endl;
 
+    t += dt;
   }
 
   // Plotting

@@ -68,12 +68,21 @@ int main()
   std::vector<std::pair<double,double>> vel_rk4;
   std::vector<std::pair<double,double>> vel_euler;
   std::vector<std::pair<double,double>> vel_ideal;
+  x_rk4.push_back(std::make_pair(t,X_init[0]));
+  x_euler.push_back(std::make_pair(t,X_init[0]));
+  x_ideal.push_back(std::make_pair(t,X_init[0]));
+  vel_rk4.push_back(std::make_pair(t,X_init[1]));
+  vel_euler.push_back(std::make_pair(t,X_init[1]));
+  vel_ideal.push_back(std::make_pair(t,X_init[1]));
 
   //time loop
   int nSteps = round( ( tMax - t ) / dt );
 
   for (int i = 0; i<=nSteps; i++)
   {
+    // NOTE: RK4 and Euler are predicting the next state given info about the current
+    // state and the change in time dt
+
     // RK4
     Vector k1 = dt*first_order( t, X_rk4 );
     Vector k2 = dt*first_order( t + dt / 2.0,  X_rk4 + k1 / 2.0);
@@ -82,19 +91,19 @@ int main()
     X_rk4 += ( k1 + 2.0 * k2 + 2.0 * k3 + k4 ) / 6.0;
 
     // Euler
-    X_euler += dt * first_order(t+dt, X_euler);
+    X_euler += dt * first_order(t, X_euler);
 
     // Ideal
     X_ideal = state_ideal(t+dt, X_init);
 
     // Store the data in the variables
-    x_rk4.push_back(std::make_pair(t,X_rk4[0]));
-    x_euler.push_back(std::make_pair(t,X_euler[0]));
-    x_ideal.push_back(std::make_pair(t,X_ideal[0]));
+    x_rk4.push_back(std::make_pair(t+dt,X_rk4[0]));
+    x_euler.push_back(std::make_pair(t+dt,X_euler[0]));
+    x_ideal.push_back(std::make_pair(t+dt,X_ideal[0]));
 
-    vel_rk4.push_back(std::make_pair(t,X_rk4[1]));
-    vel_euler.push_back(std::make_pair(t,X_euler[1]));
-    vel_ideal.push_back(std::make_pair(t,X_ideal[1]));
+    vel_rk4.push_back(std::make_pair(t+dt,X_rk4[1]));
+    vel_euler.push_back(std::make_pair(t+dt,X_euler[1]));
+    vel_ideal.push_back(std::make_pair(t+dt,X_ideal[1]));
 
     t += dt;
   }
